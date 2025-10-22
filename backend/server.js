@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Mock user database (in real app, use MongoDB)
+// Mock user database
 const users = [
   {
     id: 1,
@@ -21,13 +21,50 @@ const users = [
   }
 ];
 
+// ========== ROUTES ==========
+
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: '🎬 CineVerse Backend API is running!',
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      movies: {
+        popular: '/api/movies/popular',
+        search: '/api/movies/search?query=avatar',
+        details: '/api/movies/:id'
+      },
+      tv: {
+        popular: '/api/tv/popular',
+        search: '/api/tv/search?query=breaking+bad',
+        details: '/api/tv/:id'
+      },
+      auth: {
+        login: '/api/auth/login (POST)',
+        register: '/api/auth/register (POST)'
+      }
+    }
+  });
+});
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'CineVerse Backend is running perfectly!',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Authentication routes
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
   
   console.log('Login attempt:', email);
   
-  // Find user
   const user = users.find(u => u.email === email && u.password === password);
   
   if (user) {
@@ -52,7 +89,6 @@ app.post('/api/auth/login', (req, res) => {
 app.post('/api/auth/register', (req, res) => {
   const { email, password, username } = req.body;
   
-  // Check if user exists
   const existingUser = users.find(u => u.email === email);
   if (existingUser) {
     return res.status(400).json({
@@ -61,7 +97,6 @@ app.post('/api/auth/register', (req, res) => {
     });
   }
   
-  // Create new user
   const newUser = {
     id: users.length + 1,
     email,
@@ -82,7 +117,7 @@ app.post('/api/auth/register', (req, res) => {
   });
 });
 
-// Movie routes (proxy to TMDB API)
+// Movie routes
 app.get('/api/movies/popular', async (req, res) => {
   try {
     const { page = 1 } = req.query;
@@ -100,6 +135,10 @@ app.get('/api/movies/popular', async (req, res) => {
 app.get('/api/movies/search', async (req, res) => {
   try {
     const { query, page = 1 } = req.query;
+    if (!query) {
+      return res.status(400).json({ message: 'Query parameter is required' });
+    }
+    
     const response = await fetch(
       `https://api.themoviedb.org/3/search/movie?api_key=1e407dce62f05c3441591706634f15e7&query=${encodeURIComponent(query)}&page=${page}`
     );
@@ -125,12 +164,74 @@ app.get('/api/movies/:id', async (req, res) => {
   }
 });
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'CineVerse Backend is running!',
-    timestamp: new Date().toISOString() 
+// TV Show routes
+app.get('/api/tv/popular', async (req, res) => {
+  try {
+    const { page = 1 } = req.query;
+    const response = await fetch(
+      `https://api.themoviedb.org/3/tv/popular?api_key=1e407dce62f05c3441591706634f15e7&page=${page}`
+    );
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching popular TV shows:', error);
+    res.status(500).json({ message: 'Error fetching TV shows' });
+  }
+});
+
+app.get('/api/tv/search', async (req, res) => {
+  try {
+    const { query, page = 1 } = req.query;
+    if (!query) {
+      return res.status(400).json({ message: 'Query parameter is required' });
+    }
+    
+    const response = await fetch(
+      `https://api.themoviedb.org/3/search/tv?api_key=1e407dce62f05c3441591706634f15e7&query=${encodeURIComponent(query)}&page=${page}`
+    );
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error searching TV shows:', error);
+    res.status(500).json({ message: 'Error searching TV shows' });
+  }
+});
+
+app.get('/api/tv/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const response = await fetch(
+      `https://api.themoviedb.org/3/tv/${id}?api_key=1e407dce62f05c3441591706634f15e7`
+    );
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching TV show details:', error);
+    res.status(500).json({ message: 'Error fetching TV show details' });
+  }
+});
+
+// 404 handler for undefined routes
+app.use('*', (req, res) => {
+  res.status(404).json({
+    message: 'Route not found',
+    path: req.originalUrl,
+    availableEndpoints: {
+      root: '/',
+      health: '/api/health',
+      movies: '/api/movies/popular',
+      tv: '/api/tv/popular',
+      auth: '/api/auth/login'
+    }
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ 
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'production' ? {} : err.message
   });
 });
 
@@ -138,22 +239,7 @@ app.get('/api/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🎬 CineVerse Backend Server running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🌐 Root endpoint: http://localhost:${PORT}/`);
   console.log(`🎯 Demo login: demo@example.com / password123`);
-});
-
-
-
-
-// Root route - simple welcome message
-app.get('/', (req, res) => {
-    res.json({
-        message: '🎬 CineVerse Backend API is running!',
-        endpoints: {
-            health: '/api/health',
-            movies: '/api/movies/popular',
-            tvshows: '/api/tv/popular',
-            auth: '/api/auth/login'
-        },
-        documentation: 'Check the GitHub repo for API usage'
-    });
+  console.log(`🚀 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
