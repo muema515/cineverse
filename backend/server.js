@@ -140,3 +140,20 @@ app.listen(PORT, () => {
   console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🎯 Demo login: demo@example.com / password123`);
 });
+
+
+
+
+// Root route - simple welcome message
+app.get('/', (req, res) => {
+    res.json({
+        message: '🎬 CineVerse Backend API is running!',
+        endpoints: {
+            health: '/api/health',
+            movies: '/api/movies/popular',
+            tvshows: '/api/tv/popular',
+            auth: '/api/auth/login'
+        },
+        documentation: 'Check the GitHub repo for API usage'
+    });
+});
