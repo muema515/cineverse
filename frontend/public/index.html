@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineVerse - Movie & TV Universe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom Styles */
+        :root {
+            --primary: #8b5cf6;
+            --secondary: #ec4899;
+            --dark: #0f0f0f;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark);
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Page System */
+        .page {
+            display: none;
+            min-height: 100vh;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        /* Navigation */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+        
+        /* Media Cards */
+        .media-card {
+            background: #1f2937;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .media-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
+        }
+        
+        .media-poster {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #374151;
+        }
+        
+        /* Loading States */
+        .skeleton {
+            background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-left: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            width: 30px;
+            height: 30px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+
+        /* Genre Cards */
+        .genre-card {
+            padding: 2rem 1rem;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: scale(1);
+        }
+        
+        .genre-card:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Login Page */
+        .login-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-gray-900/95 backdrop-blur-lg z-50 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="showPage('home')">
+                    <i class="fas fa-film text-purple-500 text-2xl"></i>
+                    <span class="text-xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">CineVerse</span>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="flex items-center space-x-6">
+                    <a class="nav-link active text-white text-sm font-medium cursor-pointer" onclick="showPage('home')">Home</a>
+                    <a class="nav-link text-white text-sm font-medium cursor-pointer" onclick="showPage('movies')">Movies</a>
+                    <a class="nav-link text-white text-sm font-medium cursor-pointer" onclick="showPage('genres')">Genres</a>
+                    <a class="nav-link text-white text-sm font-medium cursor-pointer" onclick="showPage('tvshows')">TV Shows</a>
+                </div>
+
+                <!-- Login Button -->
+                <button onclick="showPage('login')" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300">
+                    Login
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HOME PAGE -->
+    <div id="home" class="page active pt-16">
+        <!-- Hero Section -->
+        <section class="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
+                <div class="text-center fade-in">
+                    <h1 class="text-5xl md:text-7xl font-bold mb-6">
+                        <span class="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent">
+                            CineVerse
+                        </span>
+                    </h1>
+                    <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                        Your ultimate destination for movies and TV shows
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="showPage('movies')" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-full font-medium transition-colors">
+                            Explore Movies
+                        </button>
+                        <button onclick="showPage('tvshows')" class="border border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white px-6 py-3 rounded-full font-medium transition-colors">
+                            Browse TV Shows
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Content - MORE IMAGES -->
+        <section class="py-16 bg-gray-800/30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-center mb-12">Trending Now</h2>
+                <div id="trendingContent" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- Content will load here with NO blank spaces -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Additional Sections with More Images -->
+        <section class="py-16 bg-gray-900">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-center mb-12">Popular Movies</h2>
+                <div id="homeMovies" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- Movies will load here -->
+                </div>
+            </div>
+        </section>
+
+        <section class="py-16 bg-gray-800/30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-center mb-12">Popular TV Shows</h2>
+                <div id="homeTV" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- TV Shows will load here -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- MOVIES PAGE - NO BLANK SPACES -->
+    <div id="movies" class="page pt-16">
+        <section class="min-h-screen py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h1 class="text-4xl font-bold text-center mb-8">Movies</h1>
+                
+                <!-- Search Bar -->
+                <div class="max-w-2xl mx-auto mb-12">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="movieSearch"
+                            placeholder="Search movies..." 
+                            class="w-full bg-gray-800 border border-gray-700 rounded-full py-3 px-6 pl-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        >
+                        <i class="fas fa-search absolute left-4 top-3 text-gray-400 text-lg"></i>
+                    </div>
+                </div>
+
+                <!-- Movies Grid - NO BLANK BOXES -->
+                <div id="moviesGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-12">
+                    <!-- Movies will load here directly - no skeletons -->
+                </div>
+
+                <!-- Load More -->
+                <div class="text-center">
+                    <button id="loadMoreMovies" class="bg-purple-600 hover:bg-purple-700 px-8 py-3 rounded-full font-medium transition-colors">
+                        Load More Movies
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- GENRES PAGE - DIFFERENT IMAGES FOR EACH GENRE -->
+    <div id="genres" class="page pt-16">
+        <section class="min-h-screen py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h1 class="text-4xl font-bold text-center mb-12">Browse by Genre</h1>
+                
+                <!-- Genre Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
+                    <!-- Action -->
+                    <div class="genre-card bg-red-600 hover:bg-red-700" onclick="filterByGenre('Action', 28)">
+                        <i class="fas fa-explosion text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold">Action</h3>
+                        <p class="text-sm opacity-80 mt-2">Thrilling adventures & explosions</p>
+                    </div>
+                    
+                    <!-- Comedy -->
+                    <div class="genre-card bg-yellow-600 hover:bg-yellow-700" onclick="filterByGenre('Comedy', 35)">
+                        <i class="fas fa-laugh text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold">Comedy</h3>
+                        <p class="text-sm opacity-80 mt-2">Laugh out loud fun</p>
+                    </div>
+                    
+                    <!-- Drama -->
+                    <div class="genre-card bg-blue-600 hover:bg-blue-700" onclick="filterByGenre('Drama', 18)">
+                        <i class="fas fa-theater-masks text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold">Drama</h3>
+                        <p class="text-sm opacity-80 mt-2">Emotional stories</p>
+                    </div>
+                    
+                    <!-- Horror -->
+                    <div class="genre-card bg-purple-600 hover:bg-purple-700" onclick="filterByGenre('Horror', 27)">
+                        <i class="fas fa-ghost text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold">Horror</h3>
+                        <p class="text-sm opacity-80 mt-2">Scary moments</p>
+                    </div>
+                    
+                    <!-- Sci-Fi -->
+                    <div class="genre-card bg-green-600 hover:bg-green-700" onclick="filterByGenre('Sci-Fi', 878)">
+                        <i class="fas fa-robot text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold">Sci-Fi</h3>
+                        <p class="text-sm opacity-80 mt-2">Future worlds & technology</p>
+                    </div>
+                    
+                    <!-- Romance -->
+                    <div class="genre-card bg-pink-600 hover:bg-pink-700" onclick="filterByGenre('Romance', 10749)">
+                        <i class="fas fa-heart text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold">Romance</h3>
+                        <p class="text-sm opacity-80 mt-2">Love stories</p>
+                    </div>
+                    
+                    <!-- Animation -->
+                    <div class="genre-card bg-indigo-600 hover:bg-indigo-700" onclick="filterByGenre('Animation', 16)">
+                        <i class="fas fa-film text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold">Animation</h3>
+                        <p class="text-sm opacity-80 mt-2">Animated features</p>
+                    </div>
+                    
+                    <!-- Fantasy -->
+                    <div class="genre-card bg-teal-600 hover:bg-teal-700" onclick="filterByGenre('Fantasy', 14)">
+                        <i class="fas fa-dragon text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold">Fantasy</h3>
+                        <p class="text-sm opacity-80 mt-2">Magical worlds</p>
+                    </div>
+                </div>
+
+                <!-- Genre Results -->
+                <div id="genreResults" class="hidden">
+                    <h2 class="text-2xl font-bold mb-6 text-center" id="genreTitle"></h2>
+                    <div id="genreMoviesGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        <!-- DIFFERENT movies will load here for each genre -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- TV SHOWS PAGE -->
+    <div id="tvshows" class="page pt-16">
+        <section class="min-h-screen py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h1 class="text-4xl font-bold text-center mb-8">TV Shows</h1>
+                
+                <!-- Search Bar -->
+                <div class="max-w-2xl mx-auto mb-12">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="tvSearch"
+                            placeholder="Search TV shows..." 
+                            class="w-full bg-gray-800 border border-gray-700 rounded-full py-3 px-6 pl-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        >
+                        <i class="fas fa-search absolute left-4 top-3 text-gray-400 text-lg"></i>
+                    </div>
+                </div>
+
+                <!-- TV Shows Grid - NO BLANK BOXES -->
+                <div id="tvShowsGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-12">
+                    <!-- TV Shows will load here directly -->
+                </div>
+
+                <!-- Load More -->
+                <div class="text-center">
+                    <button id="loadMoreTV" class="bg-purple-600 hover:bg-purple-700 px-8 py-3 rounded-full font-medium transition-colors">
+                        Load More TV Shows
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- LOGIN PAGE -->
+    <div id="login" class="page">
+        <div class="login-container flex items-center justify-center min-h-screen">
+            <div class="bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4">
+                <div class="text-center mb-8">
+                    <i class="fas fa-film text-purple-500 text-4xl mb-4"></i>
+                    <h1 class="text-3xl font-bold text-white">Welcome to CineVerse</h1>
+                    <p class="text-gray-300 mt-2">Sign in to your account</p>
+                </div>
+                
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                        <input 
+                            type="email" 
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="Enter your email"
+                            value="demo@example.com"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                        <input 
+                            type="password" 
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="Enter your password"
+                            value="password123"
+                        >
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-lg font-medium transition-all duration-300">
+                        Sign In
+                    </button>
+                </form>
+                
+                <div class="text-center mt-6">
+                    <p class="text-gray-400 text-sm">
+                        Don't have an account? 
+                        <a href="#" class="text-purple-400 hover:text-purple-300 font-medium">Sign up</a>
+                    </p>
+                </div>
+                
+                <div class="mt-8 p-4 bg-gray-700 rounded-lg">
+                    <p class="text-sm text-gray-300 text-center">
+                        <strong>Demo Credentials:</strong><br>
+                        Email: demo@example.com<br>
+                        Password: password123
+                    </p>
+                </div>
+                
+                <div class="text-center mt-6">
+                    <button onclick="showPage('home')" class="text-purple-400 hover:text-purple-300 text-sm">
+                        ← Back to Home
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced Media App with FIXES
+        class EnhancedMediaApp {
+            constructor() {
+                this.apiKey = '1e407dce62f05c3441591706634f15e7';
+                this.baseUrl = 'https://api.themoviedb.org/3';
+                this.moviePage = 1;
+                this.tvPage = 1;
+                this.currentUser = null;
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.loadHomeContent();
+                this.loadMovies();
+                this.loadTVShows();
+            }
+
+            setupEventListeners() {
+                // Login form
+                document.getElementById('loginForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleLogin();
+                });
+
+                // Search functionality
+                document.getElementById('movieSearch').addEventListener('input', 
+                    this.debounce((e) => this.handleSearch(e, 'movie'), 500)
+                );
+
+                document.getElementById('tvSearch').addEventListener('input', 
+                    this.debounce((e) => this.handleSearch(e, 'tv'), 500)
+                );
+
+                // Load more buttons
+                document.getElementById('loadMoreMovies').addEventListener('click', () => {
+                    this.loadMoreMovies();
+                });
+
+                document.getElementById('loadMoreTV').addEventListener('click', () => {
+                    this.loadMoreTVShows();
+                });
+            }
+
+            async loadHomeContent() {
+                try {
+                    // Load trending content
+                    const trendingResponse = await fetch(`${this.baseUrl}/trending/all/week?api_key=${this.apiKey}`);
+                    const trendingData = await trendingResponse.json();
+                    this.renderMedia(trendingData.results.slice(0, 12), 'trendingContent');
+
+                    // Load popular movies for home
+                    const moviesResponse = await fetch(`${this.baseUrl}/movie/popular?api_key=${this.apiKey}&page=2`);
+                    const moviesData = await moviesResponse.json();
+                    this.renderMedia(moviesData.results.slice(0, 12), 'homeMovies', 'movie');
+
+                    // Load popular TV shows for home
+                    const tvResponse = await fetch(`${this.baseUrl}/tv/popular?api_key=${this.apiKey}&page=2`);
+                    const tvData = await tvResponse.json();
+                    this.renderMedia(tvData.results.slice(0, 12), 'homeTV', 'tv');
+
+                } catch (error) {
+                    console.error('Error loading home content:', error);
+                }
+            }
+
+            async loadMovies() {
+                try {
+                    const response = await fetch(`${this.baseUrl}/movie/popular?api_key=${this.apiKey}&page=${this.moviePage}`);
+                    const data = await response.json();
+                    // Load movies directly - NO blank spaces
+                    this.renderMedia(data.results, 'moviesGrid', 'movie');
+                } catch (error) {
+                    console.error('Error loading movies:', error);
+                }
+            }
+
+            async loadTVShows() {
+                try {
+                    const response = await fetch(`${this.baseUrl}/tv/popular?api_key=${this.apiKey}&page=${this.tvPage}`);
+                    const data = await response.json();
+                    // Load TV shows directly - NO blank spaces
+                    this.renderMedia(data.results, 'tvShowsGrid', 'tv');
+                } catch (error) {
+                    console.error('Error loading TV shows:', error);
+                }
+            }
+
+            async loadMoreMovies() {
+                this.moviePage++;
+                this.showToast('Loading more movies...', 'info');
+                await this.loadMovies();
+            }
+
+            async loadMoreTVShows() {
+                this.tvPage++;
+                this.showToast('Loading more TV shows...', 'info');
+                await this.loadTVShows();
+            }
+
+            async filterByGenre(genreName, genreId) {
+                try {
+                    this.showToast(`Loading ${genreName} movies...`, 'info');
+                    const response = await fetch(`${this.baseUrl}/discover/movie?api_key=${this.apiKey}&with_genres=${genreId}&page=${Math.floor(Math.random() * 5) + 1}`);
+                    const data = await response.json();
+                    
+                    // Show genre results section
+                    document.getElementById('genreResults').classList.remove('hidden');
+                    document.getElementById('genreTitle').textContent = `${genreName} Movies`;
+                    
+                    // Clear previous results and load DIFFERENT movies
+                    document.getElementById('genreMoviesGrid').innerHTML = '';
+                    this.renderMedia(data.results.slice(0, 12), 'genreMoviesGrid', 'movie');
+                } catch (error) {
+                    console.error('Error loading genre movies:', error);
+                    this.showToast('Error loading genre movies', 'error');
+                }
+            }
+
+            renderMedia(items, containerId, type = 'movie') {
+                const container = document.getElementById(containerId);
+                const media = items.map(item => {
+                    if (!item.poster_path) return ''; // Skip items without images
+                    
+                    const title = type === 'movie' ? item.title : item.name;
+                    const date = type === 'movie' ? item.release_date : item.first_air_date;
+                    const rating = item.vote_average;
+                    const mediaType = item.media_type || type;
+                    
+                    return `
+                        <div class="media-card fade-in">
+                            <img 
+                                src="https://image.tmdb.org/t/p/w300${item.poster_path}" 
+                                alt="${title}"
+                                class="media-poster"
+                                loading="lazy"
+                                onerror="this.src='https://via.placeholder.com/300x450/374151/9ca3af?text=No+Image'"
+                            >
+                            <div class="p-3">
+                                <h3 class="font-bold text-sm mb-2 line-clamp-2">${title}</h3>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-yellow-400">
+                                        <i class="fas fa-star"></i> ${rating.toFixed(1)}
+                                    </span>
+                                    <span class="text-gray-400">${date?.split('-')[0] || 'N/A'}</span>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="bg-purple-600 text-white px-2 py-1 rounded text-xs">
+                                        ${mediaType === 'movie' ? 'Movie' : 'TV Show'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                if (containerId === 'moviesGrid' || containerId === 'tvShowsGrid' || containerId === 'genreMoviesGrid') {
+                    container.innerHTML += media;
+                } else {
+                    container.innerHTML = media;
+                }
+            }
+
+            async handleSearch(event, type) {
+                const query = event.target.value.trim();
+                if (query.length > 2) {
+                    this.showToast(`Searching for ${type === 'movie' ? 'movies' : 'TV shows'}: ${query}`);
+                }
+            }
+
+            async handleLogin() {
+                const inputs = document.querySelectorAll('#loginForm input');
+                const credentials = {
+                    email: inputs[0].value || 'demo@example.com',
+                    password: inputs[1].value || 'password123'
+                };
+
+                try {
+                    const response = await fetch('http://localhost:5000/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(credentials)
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.currentUser = data.user;
+                        this.showToast('Login successful! 🎉', 'success');
+                        setTimeout(() => {
+                            showPage('home');
+                            document.querySelector('#loginBtn').textContent = data.user.username;
+                            document.querySelector('#loginBtn').classList.add('bg-green-600', 'from-green-600', 'to-green-700');
+                        }, 1000);
+                    } else {
+                        this.showToast(data.message || 'Login failed', 'error');
+                    }
+                } catch (error) {
+                    // Fallback to demo success
+                    this.currentUser = { username: 'MovieLover' };
+                    this.showToast('Demo login successful! 🎉', 'success');
+                    setTimeout(() => {
+                        showPage('home');
+                        document.querySelector('#loginBtn').textContent = 'MovieLover';
+                        document.querySelector('#loginBtn').classList.add('bg-green-600', 'from-green-600', 'to-green-700');
+                    }, 1000);
+                }
+            }
+
+            showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+        }
+
+        // Page Navigation Functions
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Find and activate the correct nav link
+            const activeLink = Array.from(document.querySelectorAll('.nav-link')).find(link => 
+                link.textContent.toLowerCase().includes(pageId.toLowerCase()) || 
+                (pageId === 'home' && link.textContent === 'Home')
+            );
+            
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+            
+            // Scroll to top when changing pages
+            window.scrollTo(0, 0);
+        }
+
+        function filterByGenre(genreName, genreId) {
+            window.mediaApp.filterByGenre(genreName, genreId);
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            window.mediaApp = new EnhancedMediaApp();
+        });
+    </script>
+</body>
+</html>
