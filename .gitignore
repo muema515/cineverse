@@ -15,3 +15,5 @@ Thumbs.db
 # Runtime data
 *.pid
 *.seed
+# Local Netlify folder
+.netlify

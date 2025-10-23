@@ -1,12 +1,8 @@
 {
   "name": "cineverse",
   "version": "1.0.0",
-  "description": "Movie discovery app with trailers",
   "scripts": {
-    "build": "echo 'Building static site'",
-    "dev": "echo 'Development server'"
-  },
-  "keywords": ["movies", "trailers", "discovery"],
-  "author": "Stella",
-  "license": "MIT"
+    "build": "echo 'No build needed for static site'",
+    "dev": "echo 'No dev server needed'"
+  }
 }
