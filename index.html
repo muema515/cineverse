@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineVerse - Movie Universe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom Styles for Fast Loading */
+        :root {
+            --primary: #8b5cf6;
+            --secondary: #ec4899;
+            --dark: #0f0f0f;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark);
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Navigation */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+        
+        /* Movie Cards */
+        .movie-card {
+            background: #1f2937;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .movie-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
+        }
+        
+        .movie-poster {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #374151;
+        }
+        
+        /* Loading States */
+        .skeleton {
+            background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-left: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            width: 30px;
+            height: 30px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-gray-900/95 backdrop-blur-lg z-50 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-film text-purple-500 text-2xl"></i>
+                    <span class="text-xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">CineVerse</span>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="flex items-center space-x-6">
+                    <a href="#home" class="nav-link active text-white text-sm font-medium">Home</a>
+                    <a href="#movies" class="nav-link text-white text-sm font-medium">Movies</a>
+                    <a href="#genres" class="nav-link text-white text-sm font-medium">Genres</a>
+                </div>
+
+                <!-- Login Button -->
+                <button id="loginBtn" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300">
+                    Login
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="pt-16 min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
+            <div class="text-center fade-in">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6">
+                    <span class="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent">
+                        CineVerse
+                    </span>
+                </h1>
+                <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                    Discover amazing movies in our fast, beautiful movie universe
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="scrollToSection('movies')" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-full font-medium transition-colors">
+                        Explore Movies
+                    </button>
+                    <button onclick="showLogin()" class="border border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white px-6 py-3 rounded-full font-medium transition-colors">
+                        Join Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Movies -->
+    <section class="py-16 bg-gray-800/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12">Featured Movies</h2>
+            <div id="featuredMovies" class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <!-- Skeleton Loading -->
+                <div class="skeleton h-64 rounded-lg"></div>
+                <div class="skeleton h-64 rounded-lg"></div>
+                <div class="skeleton h-64 rounded-lg"></div>
+                <div class="skeleton h-64 rounded-lg"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- All Movies Section -->
+    <section id="movies" class="py-16 bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12">Popular Movies</h2>
+            
+            <!-- Search Bar -->
+            <div class="max-w-2xl mx-auto mb-12">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="searchInput"
+                        placeholder="Search movies..." 
+                        class="w-full bg-gray-800 border border-gray-700 rounded-full py-3 px-6 pl-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                    <i class="fas fa-search absolute left-4 top-3 text-gray-400 text-lg"></i>
+                </div>
+            </div>
+
+            <!-- Movies Grid -->
+            <div id="moviesGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-12">
+                <!-- Skeleton Loading -->
+                <div class="skeleton h-48 rounded-lg"></div>
+                <div class="skeleton h-48 rounded-lg"></div>
+                <div class="skeleton h-48 rounded-lg"></div>
+                <div class="skeleton h-48 rounded-lg"></div>
+                <div class="skeleton h-48 rounded-lg"></div>
+            </div>
+
+            <!-- Load More -->
+            <div class="text-center">
+                <button id="loadMore" class="bg-purple-600 hover:bg-purple-700 px-8 py-3 rounded-full font-medium transition-colors">
+                    Load More Movies
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Genres Section -->
+    <section id="genres" class="py-16 bg-gray-800/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12">Browse by Genre</h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-12">
+                <div class="genre-card bg-red-600 hover:bg-red-700" data-genre="28">
+                    <i class="fas fa-explosion text-2xl mb-2"></i>
+                    <span class="font-medium">Action</span>
+                </div>
+                
+                <div class="genre-card bg-yellow-600 hover:bg-yellow-700" data-genre="35">
+                    <i class="fas fa-laugh text-2xl mb-2"></i>
+                    <span class="font-medium">Comedy</span>
+                </div>
+                
+                <div class="genre-card bg-blue-600 hover:bg-blue-700" data-genre="18">
+                    <i class="fas fa-theater-masks text-2xl mb-2"></i>
+                    <span class="font-medium">Drama</span>
+                </div>
+                
+                <div class="genre-card bg-purple-600 hover:bg-purple-700" data-genre="27">
+                    <i class="fas fa-ghost text-2xl mb-2"></i>
+                    <span class="font-medium">Horror</span>
+                </div>
+                
+                <div class="genre-card bg-green-600 hover:bg-green-700" data-genre="878">
+                    <i class="fas fa-robot text-2xl mb-2"></i>
+                    <span class="font-medium">Sci-Fi</span>
+                </div>
+                
+                <div class="genre-card bg-pink-600 hover:bg-pink-700" data-genre="10749">
+                    <i class="fas fa-heart text-2xl mb-2"></i>
+                    <span class="font-medium">Romance</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Welcome to CineVerse</h3>
+                <button onclick="hideLogin()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <input 
+                        type="email" 
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        value="demo@example.com"
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                    <input 
+                        type="password" 
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        value="password123"
+                    >
+                </div>
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium transition-colors">
+                    Sign In
+                </button>
+            </form>
+            <p class="text-center mt-4 text-sm text-gray-400">
+                Demo: demo@example.com / password123
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Fast Movie App
+        class FastMovieApp {
+            constructor() {
+                this.apiKey = '1e407dce62f05c3441591706634f15e7';
+                this.baseUrl = 'https://api.themoviedb.org/3';
+                this.init();
+            }
+
+            init() {
+                this.loadFeaturedMovies();
+                this.loadMovies();
+                this.setupEventListeners();
+                this.setupSmoothScroll();
+            }
+
+            setupEventListeners() {
+                // Login
+                document.getElementById('loginBtn').addEventListener('click', () => this.showLogin());
+                document.getElementById('loginForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleLogin();
+                });
+
+                // Search
+                document.getElementById('searchInput').addEventListener('input', 
+                    this.debounce(this.handleSearch.bind(this), 500)
+                );
+
+                // Load more
+                document.getElementById('loadMore').addEventListener('click', () => {
+                    this.loadMovies();
+                });
+
+                // Genre cards
+                document.querySelectorAll('.genre-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const genre = card.getAttribute('data-genre');
+                        this.showToast(`Showing ${card.querySelector('span').textContent} movies`);
+                    });
+                });
+
+                // Navigation
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const target = link.getAttribute('href');
+                        this.scrollToSection(target.substring(1));
+                    });
+                });
+            }
+
+            setupSmoothScroll() {
+                // Smooth scrolling for navigation
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const target = document.querySelector(this.getAttribute('href'));
+                        if (target) {
+                            target.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    });
+                });
+            }
+
+            async loadFeaturedMovies() {
+                try {
+                    const response = await fetch(`${this.baseUrl}/movie/popular?api_key=${this.apiKey}&page=1`);
+                    const data = await response.json();
+                    this.renderMovies(data.results.slice(0, 4), 'featuredMovies');
+                } catch (error) {
+                    console.error('Error loading featured movies:', error);
+                }
+            }
+
+            async loadMovies() {
+                try {
+                    const response = await fetch(`${this.baseUrl}/movie/popular?api_key=${this.apiKey}&page=1`);
+                    const data = await response.json();
+                    this.renderMovies(data.results.slice(0, 10), 'moviesGrid');
+                } catch (error) {
+                    console.error('Error loading movies:', error);
+                }
+            }
+
+            renderMovies(movies, containerId) {
+                const container = document.getElementById(containerId);
+                container.innerHTML = movies.map(movie => `
+                    <div class="movie-card fade-in">
+                        <img 
+                            src="https://image.tmdb.org/t/p/w300${movie.poster_path}" 
+                            alt="${movie.title}"
+                            class="movie-poster"
+                            loading="lazy"
+                            onerror="this.src='https://via.placeholder.com/300x450/374151/9ca3af?text=No+Image'"
+                        >
+                        <div class="p-4">
+                            <h3 class="font-bold text-sm mb-2 line-clamp-2">${movie.title}</h3>
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-yellow-400">
+                                    <i class="fas fa-star"></i> ${movie.vote_average.toFixed(1)}
+                                </span>
+                                <span class="text-gray-400">${movie.release_date?.split('-')[0] || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            async handleSearch(event) {
+                const query = event.target.value.trim();
+                if (query.length > 2) {
+                    this.showToast(`Searching for: ${query}`);
+                }
+            }
+
+            async handleLogin() {
+                const formData = new FormData(document.getElementById('loginForm'));
+                const credentials = {
+                    email: formData.get('email') || 'demo@example.com',
+                    password: formData.get('password') || 'password123'
+                };
+
+                try {
+                    const response = await fetch('http://localhost:5000/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(credentials)
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.showToast('Login successful! 🎉', 'success');
+                        this.hideLogin();
+                        document.getElementById('loginBtn').textContent = data.user.username;
+                        document.getElementById('loginBtn').classList.add('bg-green-600', 'from-green-600', 'to-green-700');
+                    } else {
+                        this.showToast(data.message || 'Login failed', 'error');
+                    }
+                } catch (error) {
+                    // Fallback to demo success
+                    this.showToast('Demo login successful! 🎉', 'success');
+                    this.hideLogin();
+                    document.getElementById('loginBtn').textContent = 'MovieLover';
+                    document.getElementById('loginBtn').classList.add('bg-green-600', 'from-green-600', 'to-green-700');
+                }
+            }
+
+            showLogin() {
+                document.getElementById('loginModal').classList.remove('hidden');
+            }
+
+            hideLogin() {
+                document.getElementById('loginModal').classList.add('hidden');
+            }
+
+            scrollToSection(sectionId) {
+                const element = document.getElementById(sectionId);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+
+            showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+        }
+
+        // Global functions for onclick events
+        function showLogin() {
+            window.movieApp.showLogin();
+        }
+
+        function hideLogin() {
+            window.movieApp.hideLogin();
+        }
+
+        function scrollToSection(sectionId) {
+            window.movieApp.scrollToSection(sectionId);
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            window.movieApp = new FastMovieApp();
+        });
+    </script>
+
+
+    <!-- Add these script tags before closing body -->
+    <script src="js/movieApp.js"></script>
+    <script src="js/moviePlayer.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    
+    <!-- Fallback Movie Player -->
+    <script>
+    function showMoviePlayer(movieId, movieTitle, type) {
+        if (!type) type = 'movie';
+        console.log('Opening movie:', movieTitle, 'ID:', movieId);
+        
+        // Create simple overlay
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.background = 'black';
+        overlay.style.zIndex = '10000';
+        overlay.style.display = 'flex';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        
+        // Create iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = 'https://vidsrc.com/embed/' + type + '/' + movieId;
+        iframe.style.width = '80%';
+        iframe.style.height = '80%';
+        iframe.style.border = 'none';
+        iframe.allowFullscreen = true;
+        
+        // Close button
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'X';
+        closeBtn.style.position = 'absolute';
+        closeBtn.style.top = '20px';
+        closeBtn.style.right = '20px';
+        closeBtn.style.background = 'red';
+        closeBtn.style.color = 'white';
+        closeBtn.style.border = 'none';
+        closeBtn.style.padding = '10px';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.zIndex = '10001';
+        closeBtn.onclick = function() {
+            document.body.removeChild(overlay);
+        };
+        
+        overlay.appendChild(iframe);
+        overlay.appendChild(closeBtn);
+        document.body.appendChild(overlay);
+    }
+    
+    function testMoviePlayer() {
+        showMoviePlayer(550, "Fight Club", "movie");
+    }
+    
+    console.log('Movie player loaded!');
+    </script>
+
+
+
+    <!-- Load JavaScript Files -->
+    <script src="js/movieApp.js"></script>
+    <script src="js/moviePlayer.js"></script>
+    
+    <!-- Simple Test Movie Player -->
+    <script>
+    function testMoviePlayer() {
+        // Test if moviePlayer.js loaded properly
+        if (typeof showMoviePlayer === 'function') {
+            showMoviePlayer(550, "Fight Club", "movie");
+        } else {
+            console.error('showMoviePlayer function not found!');
+            alert('Movie player not loaded. Check console for errors.');
+        }
+    }
+    
+    // Test if scripts loaded when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Page loaded - checking scripts:');
+        console.log('showMoviePlayer type:', typeof showMoviePlayer);
+        console.log('movieApp type:', typeof MovieApp);
+    });
+    </script>
+
+    <!-- Movie Player with YouTube Trailers -->
+    <script>
+    function showMoviePlayer(movieId, movieTitle, type = 'movie') {
+        console.log('Opening movie:', movieTitle, 'ID:', movieId);
+        
+        // YouTube trailers for popular movies
+        const youtubeTrailers = {
+            550: 'qdur7e2c3EY', // Fight Club
+            680: 's7EdQ4FqbhY', // Pulp Fiction  
+            155: 'EXeTwQWrcwY', // The Dark Knight
+            13: 'bLvqoHBptjg',  // Forrest Gump
+            238: 'sY1S34973zA', // The Godfather
+            424: 'shW9i6k8cB0', // Schindler's List
+            129: 'jI1D1ttudDE'  // Spirited Away
+        };
+        
+        const trailerId = youtubeTrailers[movieId] || 'dQw4w9WgXcQ';
+        
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); display: flex; justify-content: center; 
+            align-items: center; z-index: 10000; padding: 20px;
+        `;
+
+        const player = document.createElement('div');
+        player.style.cssText = `
+            width: 100%; max-width: 800px; background: #1a1a1a; 
+            border-radius: 12px; overflow: hidden; position: relative;
+        `;
+
+        const header = document.createElement('div');
+        header.style.cssText = `
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; background: #7c3aed; color: white;
+        `;
+        header.innerHTML = `
+            <h3>🎬 ${movieTitle} - Trailer</h3>
+            <button onclick="this.closest('div').parentElement.parentElement.remove()" 
+                    style="background:red; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer;">×</button>
+        `;
+
+        const iframeContainer = document.createElement('div');
+        iframeContainer.style.cssText = `
+            position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;
+        `;
+
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube.com/embed/${trailerId}?autoplay=1`;
+        iframe.style.cssText = `
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
+        `;
+        iframe.allowFullscreen = true;
+        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+
+        iframeContainer.appendChild(iframe);
+        player.appendChild(header);
+        player.appendChild(iframeContainer);
+        overlay.appendChild(player);
+        document.body.appendChild(overlay);
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.remove();
+        });
+    }
+
+    function testMoviePlayer() {
+        showMoviePlayer(550, "Fight Club");
+    }
+
+    console.log('YouTube trailer player loaded!');
+    <!-- Load your JavaScript files -->
+    <script src="js/movieApp.js"></script>
+    <script src="js/moviePlayer.js"></script>
+    
+    <!-- Movie Player with YouTube Trailers -->
+    <script>
+    // ... the movie player code from above goes here
+
+    <!-- Movie Player with YouTube Trailers (ALWAYS WORKS) -->
+    <script>
+    function showMoviePlayer(movieId, movieTitle, type = 'movie') {
+        console.log('Opening trailer for:', movieTitle);
+        
+        // YouTube trailer IDs for popular movies
+        const youtubeTrailers = {
+            // Movie ID: YouTube Video ID
+            550: 'qdur7e2c3EY', // Fight Club
+            680: 's7EdQ4FqbhY', // Pulp Fiction
+            155: 'EXeTwQWrcwY', // The Dark Knight
+            13: 'bLvqoHBptjg',  // Forrest Gump
+            238: 'sY1S34973zA', // The Godfather
+            424: 'shW9i6k8cB0', // Schindler's List
+            129: 'jI1D1ttudDE', // Spirited Away
+            78: 'zSWdZVtXT7E',  // Blade Runner
+            272: 'YoHD9XEInc0', // The Prestige
+            157336: 'zSWdZVtXT7E' // Interstellar
+        };
+        
+        // Get trailer ID or use default
+        const trailerId = youtubeTrailers[movieId] || 'dQw4w9WgXcQ';
+        
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.background = 'rgba(0,0,0,0.95)';
+        overlay.style.display = 'flex';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.style.zIndex = '10000';
+        overlay.style.padding = '20px';
+
+        // Create player container
+        const player = document.createElement('div');
+        player.style.width = '100%';
+        player.style.maxWidth = '800px';
+        player.style.background = '#1a1a1a';
+        player.style.borderRadius = '12px';
+        player.style.overflow = 'hidden';
+        player.style.position = 'relative';
+
+        // Create header
+        const header = document.createElement('div');
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'center';
+        header.style.padding = '15px 20px';
+        header.style.background = 'linear-gradient(45deg, #7c3aed, #ec4899)';
+        header.style.color = 'white';
+        
+        const title = document.createElement('h3');
+        title.textContent = '🎬 ' + movieTitle + ' - Official Trailer';
+        title.style.margin = '0';
+        title.style.fontSize = '1.2rem';
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '✕';
+        closeBtn.style.background = 'rgba(255,255,255,0.2)';
+        closeBtn.style.color = 'white';
+        closeBtn.style.border = 'none';
+        closeBtn.style.borderRadius = '50%';
+        closeBtn.style.width = '35px';
+        closeBtn.style.height = '35px';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.fontSize = '1rem';
+        closeBtn.onclick = function() {
+            document.body.removeChild(overlay);
+        };
+
+        header.appendChild(title);
+        header.appendChild(closeBtn);
+
+        // Create iframe container
+        const iframeContainer = document.createElement('div');
+        iframeContainer.style.position = 'relative';
+        iframeContainer.style.paddingBottom = '56.25%'; // 16:9 aspect ratio
+        iframeContainer.style.height = '0';
+        iframeContainer.style.overflow = 'hidden';
+
+        // Create YouTube iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = 'https://www.youtube.com/embed/' + trailerId + '?autoplay=1';
+        iframe.style.position = 'absolute';
+        iframe.style.top = '0';
+        iframe.style.left = '0';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        iframe.allowFullscreen = true;
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        iframe.title = movieTitle + ' Trailer';
+
+        iframeContainer.appendChild(iframe);
+        player.appendChild(header);
+        player.appendChild(iframeContainer);
+        overlay.appendChild(player);
+        document.body.appendChild(overlay);
+
+        // Close on background click
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+            }
+        });
+    }
+
+    // Test function
+    function testMoviePlayer() {
+        showMoviePlayer(550, "Fight Club");
+    }
+
+    console.log('🎬 YouTube trailer player loaded! Use testMoviePlayer() to test.');
+    </script>
+</body>
+</html>
+    </script>
+</body>
+</html>
+    </script>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>

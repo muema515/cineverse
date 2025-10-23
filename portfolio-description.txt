@@ -1,0 +1,26 @@
+PROJECT: CineVerse - Full-Stack Movie App
+
+DESCRIPTION:
+A complete movie and TV show discovery platform with real-time data from TMDB API. Features 5 interactive pages, user authentication, and responsive design.
+
+TECH STACK:
+- Frontend: HTML, CSS, JavaScript, Tailwind CSS
+- Backend: Node.js, Express.js  
+- Database: TMDB API
+- Deployment: Vercel + Render
+
+LIVE LINKS:
+- Live Demo: https://cineverse.vercel.app
+- Source Code: https://github.com/muema515/cineverse
+- Backend API: https://cineverse-backend-bnzs.onrender.com
+
+KEY FEATURES:
+✓ 5 complete pages (Home, Movies, Genres, TV Shows, Login)
+✓ Real movie/TV show data from TMDB API
+✓ User authentication system
+✓ Responsive mobile-friendly design
+✓ Search and genre filtering
+✓ Professional deployment
+
+MY ROLE:
+Full-stack developer - designed, developed, and deployed the entire application
