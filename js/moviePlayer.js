@@ -1,159 +1,106 @@
-// Movie Player Function for vidsrc.com integration
-function showMoviePlayer(movieId, movieTitle) {
-    // Create overlay container
+// Movie Player with YouTube Trailers
+function showMoviePlayer(movieId, movieTitle, type = 'movie') {
+    console.log('Opening YouTube trailer for:', movieTitle);
+    
+    // YouTube trailer IDs
+    const youtubeTrailers = {
+        550: 'qtIqKaDlqXo', // Fight Club
+        680: 's7EdQ4FqbhY', // Pulp Fiction
+        155: 'EXeTwQWrcwY', // The Dark Knight
+        13: 'bLvqoHBptjg',  // Forrest Gump
+        238: 'sY1S34973zA'  // The Godfather
+    };
+    
+    const trailerId = youtubeTrailers[movieId] || 'dQw4w9WgXcQ';
+    
     const overlay = document.createElement('div');
     overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.9);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
-        padding: 20px;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.95); display: flex; justify-content: center; 
+        align-items: center; z-index: 10000; padding: 20px;
     `;
 
-    // Create movie player container
-    const playerContainer = document.createElement('div');
-    playerContainer.style.cssText = `
-        position: relative;
-        width: 100%;
-        max-width: 800px;
-        background: #1a1a1a;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    const player = document.createElement('div');
+    player.style.cssText = `
+        width: 100%; max-width: 800px; background: #1a1a1a; 
+        border-radius: 12px; overflow: hidden; position: relative;
     `;
 
-    // Create header with title and close button
     const header = document.createElement('div');
     header.style.cssText = `
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px 20px;
-        background: #2d2d2d;
-        border-bottom: 1px solid #444;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 15px 20px; background: #7c3aed; color: white;
+    `;
+    header.innerHTML = `
+        <h3>🎬 ${movieTitle} - Trailer</h3>
+        <button onclick="this.closest('div').parentElement.parentElement.remove()" 
+                style="background:red; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer;">×</button>
     `;
 
-    const title = document.createElement('h3');
-    title.textContent = `🎬 Watching: ${movieTitle}`;
-    title.style.cssText = `
-        color: #c084fc;
-        margin: 0;
-        font-size: 1.2rem;
-    `;
-
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = '✕';
-    closeBtn.style.cssText = `
-        background: #ff4757;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        cursor: pointer;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    `;
-    closeBtn.onclick = () => document.body.removeChild(overlay);
-
-    header.appendChild(title);
-    header.appendChild(closeBtn);
-
-    // Create iframe container
     const iframeContainer = document.createElement('div');
     iframeContainer.style.cssText = `
-        position: relative;
-        padding-bottom: 56.25%; /* 16:9 aspect ratio */
-        height: 0;
-        overflow: hidden;
+        position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;
     `;
 
-    // Create iframe
     const iframe = document.createElement('iframe');
-    iframe.src = `https://vidsrc.com/embed/${movieId}`;
+    iframe.src = `https://www.youtube.com/embed/${trailerId}?autoplay=1`;
     iframe.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border: none;
-        border-radius: 0 0 8px 8px;
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
     `;
     iframe.allowFullscreen = true;
-    iframe.title = `${movieTitle} Player`;
-    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+    iframe.title = `${movieTitle} Trailer`;
 
     iframeContainer.appendChild(iframe);
-
-    // Assemble the player
-    playerContainer.appendChild(header);
-    playerContainer.appendChild(iframeContainer);
-    overlay.appendChild(playerContainer);
-
-    // Add to page
+    player.appendChild(header);
+    player.appendChild(iframeContainer);
+    overlay.appendChild(player);
     document.body.appendChild(overlay);
 
-    // Close on ESC key
-    overlay.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            document.body.removeChild(overlay);
-        }
-    });
-    overlay.focus();
-
-    // Close on background click
     overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            document.body.removeChild(overlay);
-        }
+        if (e.target === overlay) overlay.remove();
     });
 }
 
-// Function to add watch buttons to movie cards
+function testMoviePlayer() {
+    showMoviePlayer(550, "Fight Club");
+}
+
 function addWatchButtons() {
-    // This will depend on your current movie card structure
-    // You'll need to modify this based on your HTML
-    const movieCards = document.querySelectorAll('.media-card'); // Adjust selector
+    const movieCards = document.querySelectorAll('.media-card, [class*="card"]');
     
     movieCards.forEach(card => {
-        const movieId = card.getAttribute('data-movie-id');
+        if (card.querySelector('.watch-btn')) return;
+        
+        const movieId = card.getAttribute('data-movie-id') || '550';
         const movieTitle = card.getAttribute('data-movie-title') || 'Movie';
         
-        if (movieId) {
-            const watchBtn = document.createElement('button');
-            watchBtn.textContent = '🎬 Watch Now';
-            watchBtn.style.cssText = `
-                background: linear-gradient(45deg, #7c3aed, #c084fc);
-                color: white;
-                border: none;
-                padding: 10px 16px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-weight: bold;
-                margin-top: 10px;
-                transition: transform 0.2s;
-            `;
-            
-            watchBtn.onmouseover = () => watchBtn.style.transform = 'scale(1.05)';
-            watchBtn.onmouseout = () => watchBtn.style.transform = 'scale(1)';
-            
-            watchBtn.onclick = () => showMoviePlayer(movieId, movieTitle);
-            
-            card.appendChild(watchBtn);
-        }
+        const watchBtn = document.createElement('button');
+        watchBtn.className = 'watch-btn';
+        watchBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Watch Trailer';
+        watchBtn.style.cssText = `
+            background: linear-gradient(45deg, #7c3aed, #ec4899);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        `;
+        
+        watchBtn.onclick = function(e) {
+            e.stopPropagation();
+            showMoviePlayer(movieId, movieTitle);
+        };
+        
+        card.appendChild(watchBtn);
     });
 }
 
-// Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    addWatchButtons();
+    console.log('🎬 Movie player with YouTube trailers loaded!');
+    setTimeout(addWatchButtons, 1000);
 });
